@@ -29,10 +29,18 @@ public class SecurityConfigurations {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/usuarios/**").permitAll()
                         .requestMatchers("/usuarios/**").authenticated()
-                        .requestMatchers("/quadras/**").hasRole("GESTOR") // mais específico
-                        .requestMatchers(HttpMethod.GET, "/quadras").authenticated() // mais genérico
+
+                        .requestMatchers(HttpMethod.GET, "/quadras").hasAnyRole("GESTOR", "USUARIO")
+                        .requestMatchers(HttpMethod.GET, "/quadras/*").hasAnyRole("GESTOR", "USUARIO")
+
+                        .requestMatchers(HttpMethod.POST, "/quadras/**").hasRole("GESTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/quadras/**").hasRole("GESTOR")
+                        .requestMatchers(HttpMethod.PUT, "/quadras/**").hasRole("GESTOR")
+
+
                         .requestMatchers("/reservas/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reservas").hasRole("CLIENTE")
                         .anyRequest().authenticated()
