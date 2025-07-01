@@ -9,5 +9,19 @@ public enum DiaSemana {
     SEXTA ("FRIDAY"),
     SABADO ("SATURDAY");
 
-    DiaSemana(String diaDaSemanaEmIngles){}
+    private String diaSemanaEmIngles;
+
+    DiaSemana(String diaSemanaEmIngles){
+        this.diaSemanaEmIngles = diaSemanaEmIngles;
+    }
+
+    public static DiaSemana fromEnglish(String diaSemanaEmIngles){
+        for (DiaSemana diaSemana : DiaSemana.values()){
+            if (diaSemana.diaSemanaEmIngles.equals(diaSemanaEmIngles)){
+                return diaSemana;
+            }
+        }
+
+        throw new IllegalArgumentException("Esse dia da semana não é compativel.");
+    }
 }

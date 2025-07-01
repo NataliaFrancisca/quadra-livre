@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface HorarioFuncionamentoRepository extends JpaRepository<HorarioFuncionamento, Long> {
     boolean existsByDiaAndQuadraId(DiaSemana diaSemana, Long quadraId);
     List<HorarioFuncionamento> findAllByQuadraId(Long quadraId);
-    Optional<HorarioFuncionamento> findByDiaAndQuadraId(@NotNull DiaSemana diaSemana, Long quadraId);
+    Optional<HorarioFuncionamento> findByDiaAndQuadraId(DiaSemana diaSemana, Long quadraId);
 }
