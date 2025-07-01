@@ -1,5 +1,6 @@
 package br.com.nat.quadralivre.domain.usuario;
 
+import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,18 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private void verificarSeAcoesAtigemOutrasEntidades(String usuario){
+        var usuarioTemReservas = this.reservaRepository.existsByUsuarioLogin(usuario);
+
+        if (usuarioTemReservas){
+            throw new IllegalArgumentException("Ação não pode ser concluida. Existe reservas para essa quadra.");
+        }
+    }
 
     public UsuarioDadosDetalhados registrar(UsuarioRegistro usuarioRegistro){
         Usuario usuario = new Usuario(usuarioRegistro);
@@ -51,6 +63,7 @@ public class UsuarioService {
             throw new NoSuchElementException("Não existe usuário com esse número de id.");
         }
 
+        this.verificarSeAcoesAtigemOutrasEntidades(usuario.get().getLogin());
         this.usuarioRepository.deleteById(id);
     }
 }

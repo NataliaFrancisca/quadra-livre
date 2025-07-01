@@ -1,6 +1,7 @@
 package br.com.nat.quadralivre.domain.quadra;
 
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamentoRepository;
+import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,6 +18,9 @@ public class QuadraService {
     private QuadraRepository quadraRepository;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
     private HorarioFuncionamentoRepository quadraFuncionamentoRepository;
 
     private void verificarSeQuadraJaRegistradaNoEndereco(QuadraRegistro quadra){
@@ -24,6 +28,14 @@ public class QuadraService {
 
         if (quadraEstaRegistrada){
             throw new DataIntegrityViolationException("Quadra já cadastrada no sistema.");
+        }
+    }
+
+    private void verificarSeAcoesAtigemOutrasEntidades(Long quadraId){
+        var existeReservasParaQuadra = this.reservaRepository.existsByQuadraId(quadraId);
+
+        if (existeReservasParaQuadra){
+            throw new IllegalArgumentException("Ação não pode ser concluida. Existe reservas para essa quadra.");
         }
     }
 
@@ -66,14 +78,20 @@ public class QuadraService {
     public QuadraDadosDetalhados atualizarQuadra(QuadraAtualizacao quadraAtualizacao, Usuario gestor){
         var quadra = this.verificarQuadraExiste(quadraAtualizacao.id());
 
+        this.verificarSeAcoesAtigemOutrasEntidades(quadra.getId());
         this.verificarSeGestorResponsavelPelaQuadra(gestor, quadra.getGestor());
+
         quadra.atualizar(quadraAtualizacao);
+
+        this.quadraRepository.save(quadra);
 
         return new QuadraDadosDetalhados(quadra);
     }
 
     public void deletarQuadra(Long id, Usuario gestor){
         var quadra = this.verificarQuadraExiste(id);
+
+        this.verificarSeAcoesAtigemOutrasEntidades(quadra.getId());
 
         this.verificarSeGestorResponsavelPelaQuadra(gestor, quadra.getGestor());
         this.quadraRepository.deleteById(id);
