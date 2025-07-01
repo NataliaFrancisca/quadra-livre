@@ -84,6 +84,10 @@ public class ReservaService {
             throw new NoSuchElementException("Não existe quadra para esse dia da semana");
         }
 
+        if (!horarioFuncionamento.get().isDisponibilidade()){
+            throw new IllegalArgumentException("Quadra não disponível no dia indicado.");
+        }
+
         return this.gerarReservas.gerar(horarioFuncionamento.get(), reservaBusca.data());
     }
 
