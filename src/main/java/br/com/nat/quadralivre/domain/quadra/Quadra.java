@@ -29,10 +29,10 @@ public class Quadra {
     @ManyToOne
     private Usuario gestor;
 
-    @OneToMany(mappedBy = "quadra", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "quadra", cascade = CascadeType.ALL)
     private List<HorarioFuncionamento> horarios;
 
-    @OneToMany(mappedBy = "quadra", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "quadra")
     private List<Reserva> reservas;
 
     public Quadra(QuadraRegistro quadraRegistro) {
