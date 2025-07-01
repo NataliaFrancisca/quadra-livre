@@ -32,7 +32,7 @@ public class Usuario implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "usuario")
     private List<Reserva> reservas;
 
     public Usuario(UsuarioRegistro usuarioRegistro){
