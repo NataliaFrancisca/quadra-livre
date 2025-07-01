@@ -2,6 +2,7 @@ package br.com.nat.quadralivre.domain.quadra;
 
 import br.com.nat.quadralivre.domain.quadra.endereco.Endereco;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamento;
+import br.com.nat.quadralivre.domain.reserva.Reserva;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,9 @@ public class Quadra {
 
     @OneToMany(mappedBy = "quadra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HorarioFuncionamento> horarios;
+
+    @OneToMany(mappedBy = "quadra", cascade = CascadeType.ALL)
+    private List<Reserva> reservas;
 
     public Quadra(QuadraRegistro quadraRegistro) {
         this.nome = quadraRegistro.nome();

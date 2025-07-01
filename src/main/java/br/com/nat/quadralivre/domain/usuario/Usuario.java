@@ -1,5 +1,6 @@
 package br.com.nat.quadralivre.domain.usuario;
 
+import br.com.nat.quadralivre.domain.reserva.Reserva;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -30,6 +31,9 @@ public class Usuario implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Reserva> reservas;
 
     public Usuario(UsuarioRegistro usuarioRegistro){
         this.login = usuarioRegistro.login();
