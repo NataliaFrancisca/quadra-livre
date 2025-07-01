@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservaRepository extends JpaRepository<Reserva, String> {
-    boolean existsByDataAndQuadraId(LocalDateTime dataSolicitada, Long quadraId);
-
     List<Reserva> findAllByQuadraIdAndDataIsBetween(Long quadraId, LocalDateTime dataAbertura, LocalDateTime dataEncerramento);
+
+    boolean existsByQuadraId(Long quadraId);
+
+    boolean existsByUsuarioLogin(String usuario);
 }
