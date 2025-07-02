@@ -32,9 +32,13 @@ public class GerarReservas {
     private List<ReservaDisponivel> exibirSomenteReservasLivres(Long quadraId, LocalDateTime dataAbertura, LocalDateTime dataEncerramento, List<ReservaDisponivel> reservasDisponiveis){
         List<Reserva> reservasJaReservadas = this.reservaRepository.findAllByQuadraIdAndDataIsBetween(quadraId, dataAbertura, dataEncerramento);
 
-        return reservasDisponiveis.stream()
+        var reservasLivres = reservasDisponiveis.stream()
                 .filter(rd -> reservasJaReservadas.stream().noneMatch(rr -> rr.getData().isEqual(rd.data())))
                 .toList();
+
+
+        var horarioDataAtual = LocalDateTime.now();
+        return reservasLivres.stream().filter(h -> h.data().isAfter(horarioDataAtual)).toList();
     }
 
     private List<ReservaDisponivel> gerarReservasParaReservasLongas(HorarioFuncionamento funcionamentoDados, LocalDate dataSolicitada){
