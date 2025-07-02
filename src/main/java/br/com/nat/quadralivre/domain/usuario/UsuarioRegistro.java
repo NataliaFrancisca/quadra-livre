@@ -12,7 +12,7 @@ public record UsuarioRegistro(
         String senha,
         @NotBlank(message = "O campo nome é obrigatório.")
         String nome,
-        @NotBlank(message = "O campo telefone é obrigatório.")
+        @NotBlank(message = "O campo telefone é obrigatório. Exemplo: (dd) xxxx-xxxx")
         String telefone,
         @NotBlank
         @CPF(message = "Digite um número de CPF válido.")

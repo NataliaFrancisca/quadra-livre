@@ -6,12 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record ReservaRegistro(
-        @NotNull
+        @NotNull(message = "O campo de ID da quadra é obrigatório.")
         Long quadraId,
         @NotNull
-        @FutureOrPresent
+        @FutureOrPresent(message = "Digite uma data válida. Datas no presente ou futuro.")
         LocalDate data,
-        @NotNull
+        @NotNull(message = "O campo de ID da reserva é obrigatório.")
         String reservaId
 ) {
 }
