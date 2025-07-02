@@ -2,6 +2,7 @@ package br.com.nat.quadralivre.domain.usuario;
 
 import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,23 @@ public class UsuarioService {
         }
     }
 
+    private void verificarDadosSaoUnicos(UsuarioRegistro usuarioRegistro){
+        var email = this.usuarioRepository.existsByLogin(usuarioRegistro.login());
+
+        if (email){
+            throw new DataIntegrityViolationException("Já existe um usuário com o e-mail indicado.");
+        }
+
+        var cpf = this.usuarioRepository.existsByCpf(usuarioRegistro.cpf());
+
+        if (cpf){
+            throw new DataIntegrityViolationException("Já existe um usuário com o CPF indicado.");
+        }
+    }
+
     public UsuarioDadosDetalhados registrar(UsuarioRegistro usuarioRegistro){
+        this.verificarDadosSaoUnicos(usuarioRegistro);
+
         Usuario usuario = new Usuario(usuarioRegistro);
         usuario.setSenha(this.passwordEncoder.encode(usuarioRegistro.senha()));
 
