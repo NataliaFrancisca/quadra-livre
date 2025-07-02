@@ -8,7 +8,8 @@ import java.time.LocalDate;
 public record ReservaBusca(
         @NotNull
         Long quadraId,
-        @FutureOrPresent
+        @NotNull(message = "O campo data é obrigatório.")
+        @FutureOrPresent(message = "A data deve ser no presente ou futuro.")
         LocalDate data
 ) {
 }
