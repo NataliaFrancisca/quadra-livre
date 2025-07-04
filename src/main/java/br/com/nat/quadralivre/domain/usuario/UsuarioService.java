@@ -3,6 +3,7 @@ package br.com.nat.quadralivre.domain.usuario;
 import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,12 @@ public class UsuarioService {
         }
     }
 
+    private void verificarSeUsuarioPodeRealizarAcao(Usuario usuario, Long id){
+        if (!usuario.getId().equals(id)){
+            throw new AccessDeniedException("Somente o usuário pode acessar os dados.");
+        }
+    }
+
     public UsuarioDadosDetalhados registrar(UsuarioRegistro usuarioRegistro){
         this.verificarDadosSaoUnicos(usuarioRegistro);
 
@@ -63,7 +70,9 @@ public class UsuarioService {
         return new UsuarioDadosDetalhados(usuario.get());
     }
 
-    public UsuarioDadosDetalhados buscar(Long id) {
+    public UsuarioDadosDetalhados buscar(Long id, Usuario usuarioLogin) {
+        this.verificarSeUsuarioPodeRealizarAcao(usuarioLogin, id);
+
         Optional<Usuario> usuario = this.usuarioRepository.findById(id);
 
         if (usuario.isEmpty()){
