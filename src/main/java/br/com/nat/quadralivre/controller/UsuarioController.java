@@ -4,7 +4,6 @@ import br.com.nat.quadralivre.domain.usuario.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +35,8 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public ResponseEntity buscarUsuario(@PathVariable Long id, Authentication authentication){
         var usuarioLogado = (Usuario) authentication.getPrincipal();
+        var usuario = this.usuarioService.buscar(id, usuarioLogado);
 
-        if (!usuarioLogado.getId().equals(id)){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        var usuario = this.usuarioService.buscar(id);
         return ResponseEntity.ok(usuario);
     }
 
