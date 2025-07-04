@@ -6,12 +6,13 @@ import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamentoRe
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 public class ReservaService {
@@ -28,6 +29,10 @@ public class ReservaService {
     private ReservaRepository reservaRepository;
 
     private void verificarSeReservaJaFoiRealizada(String idReserva){
+        if (idReserva == null || idReserva.isBlank()) {
+            throw new IllegalArgumentException("O ID da reserva não pode ser nulo ou vazio.");
+        }
+
         boolean reservaJaExiste = this.reservaRepository.existsById(idReserva);
 
         if (reservaJaExiste){
@@ -40,36 +45,47 @@ public class ReservaService {
 
         List<ReservaDisponivel> reservasDisponiveis = this.exibirReservas(reservaBusca);
 
-        Optional<ReservaDisponivel> reserva = reservasDisponiveis.stream()
+        return reservasDisponiveis.stream()
                 .filter(h -> h.id().equals(reservaDoUsuario.reservaId()))
-                .findFirst();
-
-        if (reserva.isEmpty()){
-            throw new IllegalArgumentException("Não existe reserva livre com esse número de identificação.");
-        }
-
-        return reserva.get();
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Não existe reserva livre com esse número de identificação."));
     }
 
-    private Reserva verificarReservaExisteEUsuarioPodeRealizarAcao(String id, Usuario usuario){
-        var reservaExiste = this.reservaRepository.findById(id);
+    private Reserva verificarReservaExiste(String id){
+        return this.reservaRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Não existe reserva com esse número de ID."));
+    }
 
-        if (reservaExiste.isEmpty()){
-            throw new NoSuchElementException("Não existe reserva com esse número de ID.");
-        }
-
-        var reserva = reservaExiste.get();
-
+    private void verificarUsuarioPodeRealizarAcao(Reserva reserva, Usuario usuario){
         var usuarioReserva = reserva.getUsuario().getLogin();
         var gestorDaQuadra = reserva.getQuadra().getGestor().getLogin();
 
         if (!usuarioReserva.equals(usuario.getLogin())){
             if (!gestorDaQuadra.equals(usuario.getLogin())){
-                throw new IllegalArgumentException("Somente usuário ou gestor responsável pela quadra pode acessar esses dados.");
+                throw new AccessDeniedException("Somente o usuário ou gestor responsável pela quadra pode acessar esses dados.");
             }
         }
+    }
 
-        return reserva;
+    private void verificarSeReservaEParaOMesAtual(ReservaRegistro reservaRegistro){
+        LocalDate dataReserva = LocalDate.of(reservaRegistro.data().getYear(), reservaRegistro.data().getMonth(), 1);
+        LocalDate dataAtual = LocalDate.now();
+
+        if (dataReserva.isEqual(dataAtual)){
+            return;
+        }
+
+        boolean eUltimoDiaDoMes = dataAtual.getDayOfMonth() == dataAtual.lengthOfMonth();
+        var primeiroDiaDoProximoMes = dataAtual.plusMonths(1).withDayOfMonth(1);
+
+        boolean mesmaReferenciaDeMes = dataReserva.getMonth() == primeiroDiaDoProximoMes.getMonth()
+                && dataReserva.getYear() == primeiroDiaDoProximoMes.getYear();
+
+        if (eUltimoDiaDoMes && mesmaReferenciaDeMes){
+            return;
+        }
+
+        throw new IllegalArgumentException("Reservas para meses futuros só são liberadas no último dia do mês anterior.");
     }
 
     public List<ReservaDisponivel> exibirReservas(ReservaBusca reservaBusca){
@@ -100,17 +116,21 @@ public class ReservaService {
         reserva.setQuadra(quadra);
         reserva.setUsuario(usuario);
 
+        this.verificarSeReservaEParaOMesAtual(reservaRegistro);
+
         var reservaSalva = this.reservaRepository.save(reserva);
         return new ReservaDadosAberto(reservaSalva);
     }
 
     public ReservaDadosDetalhados buscarReserva(String id, Usuario usuario) {
-        var reserva = this.verificarReservaExisteEUsuarioPodeRealizarAcao(id, usuario);
+        var reserva = this.verificarReservaExiste(id);
+        this.verificarUsuarioPodeRealizarAcao(reserva, usuario);
         return new ReservaDadosDetalhados(reserva);
     }
 
     public void deletarReserva(String id, Usuario usuario) {
-        var reserva = this.verificarReservaExisteEUsuarioPodeRealizarAcao(id, usuario);
+        var reserva = this.verificarReservaExiste(id);
+        this.verificarUsuarioPodeRealizarAcao(reserva, usuario);
         this.reservaRepository.deleteById(reserva.getId());
     }
 }
