@@ -1,7 +1,5 @@
 package br.com.nat.quadralivre.domain.usuario;
 
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.core.userdetails.UserDetails;
