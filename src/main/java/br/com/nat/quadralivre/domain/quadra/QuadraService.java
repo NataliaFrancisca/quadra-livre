@@ -5,6 +5,7 @@ import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,7 +52,7 @@ public class QuadraService {
 
     public void verificarSeGestorResponsavelPelaQuadra(Usuario gestorQuadra, Usuario gestorAutenticacao){
         if (!gestorQuadra.getLogin().equals(gestorAutenticacao.getLogin())){
-            throw new IllegalStateException("Os dados da quadra só podem ser atualizados pelo responsável do local.");
+            throw new AccessDeniedException("Os dados da quadra só podem ser atualizados pelo responsável do local.");
         }
     }
 
