@@ -3,6 +3,8 @@ package br.com.nat.quadralivre.domain.reserva;
 import br.com.nat.quadralivre.domain.quadra.Quadra;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.DiaSemana;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamento;
+import br.com.nat.quadralivre.domain.quadra.indisponibilidade.Indisponibilidade;
+import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +42,6 @@ public class GerarReservas {
         var horarioDataAtual = LocalDateTime.now();
         return reservasLivres.stream().filter(h -> h.data().isAfter(horarioDataAtual)).toList();
     }
-
     private List<ReservaDisponivel> gerarReservasParaReservasLongas(HorarioFuncionamento funcionamentoDados, LocalDate dataSolicitada){
         List<ReservaDisponivel> reservas = new ArrayList<>();
 

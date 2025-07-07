@@ -3,6 +3,7 @@ package br.com.nat.quadralivre.domain.reserva;
 import br.com.nat.quadralivre.domain.quadra.QuadraService;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.DiaSemana;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamentoRepository;
+import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRepository;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +28,9 @@ public class ReservaService {
 
     @Autowired
     private ReservaRepository reservaRepository;
+
+    @Autowired
+    private IndisponibilidadeRepository indisponibilidadeRepository;
 
     private void verificarSeReservaJaFoiRealizada(String idReserva){
         if (idReserva == null || idReserva.isBlank()) {
@@ -88,7 +92,17 @@ public class ReservaService {
         throw new IllegalArgumentException("Reservas para meses futuros só são liberadas no último dia do mês anterior.");
     }
 
+    private void verificarSeQuadraTemEventoDeIndisponibilidadeNaDataSelecionada(LocalDate dataSolicitada){
+        var existeIndisponibilidade = this.indisponibilidadeRepository.existsByData(dataSolicitada);
+
+        if (existeIndisponibilidade){
+            throw new IllegalArgumentException("Quadra não vai estar disponível no dia indicado.");
+        }
+    }
+
     public List<ReservaDisponivel> exibirReservas(ReservaBusca reservaBusca){
+        this.verificarSeQuadraTemEventoDeIndisponibilidadeNaDataSelecionada(reservaBusca.data());
+
         this.quadraService.verificarQuadraExiste(reservaBusca.quadraId());
 
         DayOfWeek data = reservaBusca.data().getDayOfWeek();

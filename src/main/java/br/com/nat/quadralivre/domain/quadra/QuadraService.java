@@ -36,7 +36,7 @@ public class QuadraService {
         var existeReservasParaQuadra = this.reservaRepository.existsByQuadraId(quadraId);
 
         if (existeReservasParaQuadra){
-            throw new IllegalArgumentException("Ação não pode ser concluida. Existe reservas para essa quadra.");
+            throw new IllegalArgumentException("Ação não pode ser concluida, pois existe reservas para essa quadra.");
         }
     }
 
