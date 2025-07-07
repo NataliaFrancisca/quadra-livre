@@ -96,7 +96,7 @@ public class HorarioFuncionamentoService {
     }
 
     @Scheduled(cron = "0 0 0 * * MON")
-    public void atualizarDisponibilidadeDasQuadras(){
+    public void removerIndisponibilidadesDoBanco(){
         LocalDate dataAtual = LocalDate.now();
         DiaSemana diaSemana = DiaSemana.fromEnglish(dataAtual.getDayOfWeek().toString());
 
