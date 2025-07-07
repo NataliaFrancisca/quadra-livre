@@ -4,6 +4,7 @@ import br.com.nat.quadralivre.domain.quadra.QuadraAtualizacao;
 import br.com.nat.quadralivre.domain.quadra.QuadraRegistro;
 import br.com.nat.quadralivre.domain.quadra.QuadraService;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.*;
+import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRegistro;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,5 +96,12 @@ public class QuadraController {
 
         this.horarioFuncionamentoSerivce.deletarFuncionamento(paramentros);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/indisponibilidade")
+    public ResponseEntity atualizarHorarioFuncionamento(@RequestBody @Valid IndisponibilidadeRegistro indisponibilidadeRegistro, Authentication authentication){
+        var gestor = (Usuario) authentication.getPrincipal();
+        var indisponibilidade = this.horarioFuncionamentoSerivce.setarQuadraComoIndisponivelEmDataSelecionada(indisponibilidadeRegistro, gestor);
+        return ResponseEntity.ok(indisponibilidade);
     }
 }
