@@ -15,6 +15,7 @@ public record QuadraRegistro(
         Integer minutosReserva,
         @NotNull
         @PositiveOrZero
+        @Max(720)
         Integer minutosIntervalo
 ) {
 }
