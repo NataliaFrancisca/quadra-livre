@@ -1,10 +1,10 @@
 package br.com.nat.quadralivre.domain.reserva;
 
 import br.com.nat.quadralivre.domain.quadra.Quadra;
+import br.com.nat.quadralivre.domain.quadra.QuadraRepository;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.DiaSemana;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamento;
-import br.com.nat.quadralivre.domain.quadra.indisponibilidade.Indisponibilidade;
-import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,8 @@ public class GerarReservas {
     @Autowired
     private ReservaRepository reservaRepository;
 
-    private final int MINUTOS_ENTRE_RESERVA = 10;
+    @Autowired
+    private QuadraRepository quadraRepository;
 
     private LocalDateTime horarioReservaDinamico;
     private LocalDateTime horarioReservasEncerramento;
@@ -38,16 +39,19 @@ public class GerarReservas {
                 .filter(rd -> reservasJaReservadas.stream().noneMatch(rr -> rr.getData().isEqual(rd.data())))
                 .toList();
 
-
         var horarioDataAtual = LocalDateTime.now();
         return reservasLivres.stream().filter(h -> h.data().isAfter(horarioDataAtual)).toList();
     }
+
     private List<ReservaDisponivel> gerarReservasParaReservasLongas(HorarioFuncionamento funcionamentoDados, LocalDate dataSolicitada){
         List<ReservaDisponivel> reservas = new ArrayList<>();
 
-        final int MINUTOS_PARA_RESERVA_LONGA = 120;
+        final var quadra = this.quadraRepository.getReferenceById(funcionamentoDados.getQuadra().getId());
 
-        while (this.horarioReservaDinamico.plusMinutes(MINUTOS_PARA_RESERVA_LONGA).isBefore(this.horarioReservasEncerramento)){
+        final int minutosParaReserva = quadra.getMinutosReserva();
+        final int minutosParaIntervalo = quadra.getMinutosIntervalo();
+
+        while (this.horarioReservaDinamico.plusMinutes(minutosParaReserva).isBefore(this.horarioReservasEncerramento)){
             var id = this.gerarHashComoString(
                     this.horarioReservaDinamico,
                     funcionamentoDados.getQuadra(),
@@ -57,12 +61,12 @@ public class GerarReservas {
             ReservaDisponivel reserva = new ReservaDisponivel(
                     id,
                     this.horarioReservaDinamico.toLocalTime(),
-                    this.horarioReservaDinamico.toLocalTime().plusMinutes(MINUTOS_PARA_RESERVA_LONGA),
+                    this.horarioReservaDinamico.toLocalTime().plusMinutes(minutosParaReserva),
                     dataSolicitada.atTime(this.horarioReservaDinamico.toLocalTime())
             );
 
             reservas.add(reserva);
-            this.horarioReservaDinamico = this.horarioReservaDinamico.plusMinutes(MINUTOS_PARA_RESERVA_LONGA).plusMinutes(this.MINUTOS_ENTRE_RESERVA);
+            this.horarioReservaDinamico = this.horarioReservaDinamico.plusMinutes(minutosParaReserva).plusMinutes(minutosParaIntervalo);
         }
 
         return reservas;
