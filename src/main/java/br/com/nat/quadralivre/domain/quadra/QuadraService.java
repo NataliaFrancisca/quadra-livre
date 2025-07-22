@@ -1,16 +1,16 @@
 package br.com.nat.quadralivre.domain.quadra;
 
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamentoRepository;
+import br.com.nat.quadralivre.domain.quadra.validacoes.ValidadorAcaoAtingeOutraEntidade;
+import br.com.nat.quadralivre.domain.quadra.validacoes.ValidadorDadosSaoUnicos;
+import br.com.nat.quadralivre.domain.quadra.validacoes.ValidadorUsuarioPodeRealizarAcao;
 import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 public class QuadraService {
@@ -24,46 +24,33 @@ public class QuadraService {
     @Autowired
     private HorarioFuncionamentoRepository quadraFuncionamentoRepository;
 
-    private void verificarSeQuadraJaRegistradaNoEndereco(QuadraRegistro quadra){
-        boolean quadraEstaRegistrada = this.quadraRepository.existsByNomeAndEndereco(quadra.nome(), quadra.endereco());
+    @Autowired
+    private ValidadorDadosSaoUnicos validadorDadosSaoUnicos;
 
-        if (quadraEstaRegistrada){
-            throw new DataIntegrityViolationException("Quadra já cadastrada no sistema.");
-        }
+    @Autowired
+    private ValidadorAcaoAtingeOutraEntidade validadorAcaoAtingeOutraEntidade;
+
+    @Autowired
+    private ValidadorUsuarioPodeRealizarAcao validadorUsuarioPodeRealizarAcao;
+
+    private Quadra buscarQuadra(Long id){
+        return this.quadraRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Não existe quadra com esse número de ID."));
     }
 
-    private void verificarSeAcoesAtigemOutrasEntidades(Long quadraId){
-        var existeReservasParaQuadra = this.reservaRepository.existsByQuadraId(quadraId);
-
-        if (existeReservasParaQuadra){
-            throw new IllegalArgumentException("Ação não pode ser concluída, pois existe reservas para essa quadra.");
-        }
-    }
-
-    public Quadra verificarQuadraExiste(Long id){
-        Optional<Quadra> quadra = this.quadraRepository.findById(id);
-
-        if (quadra.isEmpty()){
-            throw new NoSuchElementException("Não existe registro de quadra com esse ID.");
-        }
-
-        return quadra.get();
-    }
-
-    public void verificarSeGestorResponsavelPelaQuadra(Usuario gestorQuadra, Usuario gestorAutenticacao){
-        if (!gestorQuadra.getEmail().equals(gestorAutenticacao.getEmail())){
-            throw new AccessDeniedException("Os dados da quadra só podem ser atualizados pelo responsável do local.");
-        }
-    }
-
-    public QuadraDadosDetalhados registrar(QuadraRegistro quadraRegistro, Usuario usuario){
-        this.verificarSeQuadraJaRegistradaNoEndereco(quadraRegistro);
+    public QuadraDadosDetalhados registrar(QuadraRegistro quadraRegistro, Usuario gestor){
+        this.validadorDadosSaoUnicos.validar(quadraRegistro);
 
         Quadra quadra = new Quadra(quadraRegistro);
-        quadra.setGestor(usuario);
+        quadra.setGestor(gestor);
 
         var quadraSalva = this.quadraRepository.save(quadra);
         return new QuadraDadosDetalhados(quadraSalva);
+    }
+
+    public QuadraDadosDetalhados buscarDadosQuadra(Long id){
+        var quadra = this.buscarQuadra(id);
+        return new QuadraDadosDetalhados(quadra);
     }
 
     public List<QuadraDadosDetalhados> buscarQuadras(){
@@ -71,30 +58,22 @@ public class QuadraService {
         return quadras.stream().map(QuadraDadosDetalhados::new).toList();
     }
 
-    public QuadraDadosDetalhados buscarQuadra(Long id){
-        var quadra = this.verificarQuadraExiste(id);
-        return new QuadraDadosDetalhados(quadra);
-    }
+    public QuadraDadosDetalhados atualizarQuadra(QuadraAtualizacao quadraAtualizacao, Usuario gestorRequisicao){
+        var quadra = this.buscarQuadra(quadraAtualizacao.id());
 
-    public QuadraDadosDetalhados atualizarQuadra(QuadraAtualizacao quadraAtualizacao, Usuario gestor){
-        var quadra = this.verificarQuadraExiste(quadraAtualizacao.id());
-
-        this.verificarSeAcoesAtigemOutrasEntidades(quadra.getId());
-        this.verificarSeGestorResponsavelPelaQuadra(gestor, quadra.getGestor());
+        this.validadorAcaoAtingeOutraEntidade.validar(quadra.getId());
+        this.validadorUsuarioPodeRealizarAcao.validar(quadra, gestorRequisicao);
 
         quadra.atualizar(quadraAtualizacao);
-
-        this.quadraRepository.save(quadra);
-
-        return new QuadraDadosDetalhados(quadra);
+        return new QuadraDadosDetalhados(this.quadraRepository.save(quadra));
     }
 
-    public void deletarQuadra(Long id, Usuario gestor){
-        var quadra = this.verificarQuadraExiste(id);
+    public void deletarQuadra(Long id, Usuario gestorRequisicao){
+        var quadra = this.buscarQuadra(id);
 
-        this.verificarSeAcoesAtigemOutrasEntidades(quadra.getId());
+        this.validadorAcaoAtingeOutraEntidade.validar(quadra.getId());
+        this.validadorUsuarioPodeRealizarAcao.validar(quadra, gestorRequisicao);
 
-        this.verificarSeGestorResponsavelPelaQuadra(gestor, quadra.getGestor());
         this.quadraRepository.deleteById(id);
     }
 }
