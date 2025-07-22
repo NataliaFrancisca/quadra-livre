@@ -1,5 +1,7 @@
 package br.com.nat.quadralivre.infra.security;
 
+import br.com.nat.quadralivre.infra.expection.CustomAccessDeniedHandler;
+import br.com.nat.quadralivre.infra.expection.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,10 +30,8 @@ public class SecurityConfigurations {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/login/**").permitAll()
-
-                        .requestMatchers(HttpMethod.POST, "/usuarios/**").permitAll()
-                        .requestMatchers("/usuarios/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/usuarios/registrar").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/quadras").hasAnyRole("GESTOR", "USUARIO")
                         .requestMatchers(HttpMethod.GET, "/quadras/*").hasAnyRole("GESTOR", "USUARIO")
@@ -44,6 +44,11 @@ public class SecurityConfigurations {
                         .requestMatchers("/reservas/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reservas").hasRole("CLIENTE")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> {
+                        ex.accessDeniedHandler(new CustomAccessDeniedHandler());
+                        ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint());
+                    }
                 )
                 .addFilterBefore(this.securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

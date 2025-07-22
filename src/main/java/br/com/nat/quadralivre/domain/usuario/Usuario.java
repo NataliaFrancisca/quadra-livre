@@ -22,7 +22,7 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true)
-    private String login;
+    private String email;
     private String senha;
     private String nome;
     private String telefone;
@@ -36,7 +36,7 @@ public class Usuario implements UserDetails {
     private List<Reserva> reservas;
 
     public Usuario(UsuarioRegistro usuarioRegistro){
-        this.login = usuarioRegistro.login();
+        this.email = usuarioRegistro.email();
         this.senha = usuarioRegistro.senha();
         this.nome = usuarioRegistro.nome();
         this.telefone = usuarioRegistro.telefone();
@@ -65,7 +65,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.login;
+        return this.email;
     }
 
     @Override

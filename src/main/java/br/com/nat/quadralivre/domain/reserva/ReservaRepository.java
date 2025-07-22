@@ -10,5 +10,5 @@ public interface ReservaRepository extends JpaRepository<Reserva, String> {
 
     boolean existsByQuadraId(Long quadraId);
 
-    boolean existsByUsuarioLogin(String usuario);
+    boolean existsByUsuarioEmail(String email);
 }

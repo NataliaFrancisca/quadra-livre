@@ -1,14 +1,18 @@
 package br.com.nat.quadralivre.domain.usuario;
 
-import br.com.nat.quadralivre.domain.reserva.ReservaRepository;
+import br.com.nat.quadralivre.domain.usuario.autenticacao.UsuarioAutenticacao;
+import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorAcaoAtingeOutraEntidade;
+import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorDadosSaoUnicos;
+import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorUsuarioPodeRealizarAcao;
+import br.com.nat.quadralivre.infra.security.DadosTokenJWT;
+import br.com.nat.quadralivre.infra.security.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 public class UsuarioService {
@@ -17,41 +21,44 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private ReservaRepository reservaRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private void verificarSeAcoesAtigemOutrasEntidades(String usuario){
-        var usuarioTemReservas = this.reservaRepository.existsByUsuarioLogin(usuario);
+    @Autowired
+    private AuthenticationManager manager;
 
-        if (usuarioTemReservas){
-            throw new IllegalArgumentException("Ação não pode ser concluida. Existe reservas para essa quadra.");
-        }
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private ValidadorUsuarioPodeRealizarAcao validadorUsuarioPodeRealizarAcao;
+
+    @Autowired
+    private ValidadorDadosSaoUnicos validadorDadosSaoUnicos;
+
+    @Autowired
+    private ValidadorAcaoAtingeOutraEntidade validadorAcaoAtingeOutraEntidade;
+
+    private Usuario buscarUsuario(Usuario usuario){
+        return this.usuarioRepository.findById(usuario.getId())
+                .orElseThrow(() -> new NoSuchElementException("Usuário autenticado não encontrado ou sessão inválida."));
     }
 
-    private void verificarDadosSaoUnicos(UsuarioRegistro usuarioRegistro){
-        var email = this.usuarioRepository.existsByLogin(usuarioRegistro.login());
-
-        if (email){
-            throw new DataIntegrityViolationException("Já existe um usuário com o e-mail indicado.");
-        }
-
-        var cpf = this.usuarioRepository.existsByCpf(usuarioRegistro.cpf());
-
-        if (cpf){
-            throw new DataIntegrityViolationException("Já existe um usuário com o CPF indicado.");
-        }
-    }
-
-    private void verificarSeUsuarioPodeRealizarAcao(Usuario usuario, Long id){
-        if (!usuario.getId().equals(id)){
-            throw new AccessDeniedException("Somente o usuário pode acessar os dados.");
+    public DadosTokenJWT login(UsuarioAutenticacao usuario){
+        try{
+            var authenticationToken = new UsernamePasswordAuthenticationToken(
+                    usuario.email(),
+                    usuario.senha()
+            );
+            var auth = this.manager.authenticate(authenticationToken);
+            var tokenJWT = this.tokenService.gerarToken((Usuario) auth.getPrincipal());
+            return new DadosTokenJWT(tokenJWT);
+        }catch (Exception ex){
+            throw new RuntimeException("Algo deu errado ao tentar realizar login. Verifique seus dados.");
         }
     }
 
     public UsuarioDadosDetalhados registrar(UsuarioRegistro usuarioRegistro){
-        this.verificarDadosSaoUnicos(usuarioRegistro);
+        this.validadorDadosSaoUnicos.validar(usuarioRegistro);
 
         Usuario usuario = new Usuario(usuarioRegistro);
         usuario.setSenha(this.passwordEncoder.encode(usuarioRegistro.senha()));
@@ -59,37 +66,21 @@ public class UsuarioService {
         return new UsuarioDadosDetalhados(this.usuarioRepository.save(usuario));
     }
 
-    public UsuarioDadosDetalhados atualizar(String usuarioLogin, UsuarioAtualizacao usuarioAtualizacao){
-        Optional<Usuario> usuario = this.usuarioRepository.buscarUsuarioPorCampoLogin(usuarioLogin);
-
-        if (usuario.isEmpty()){
-            throw new NoSuchElementException("Não existe usuário com esse endereço de e-mail.");
-        }
-
-        usuario.get().atualizar(usuarioAtualizacao);
-        return new UsuarioDadosDetalhados(usuario.get());
+    public UsuarioDadosDetalhados buscar(Long id, Usuario usuarioRequisicao) {
+        this.validadorUsuarioPodeRealizarAcao.validar(usuarioRequisicao.getId(), id);
+        var usuario = this.buscarUsuario(usuarioRequisicao);
+        return new UsuarioDadosDetalhados(usuario);
     }
 
-    public UsuarioDadosDetalhados buscar(Long id, Usuario usuarioLogin) {
-        this.verificarSeUsuarioPodeRealizarAcao(usuarioLogin, id);
-
-        Optional<Usuario> usuario = this.usuarioRepository.findById(id);
-
-        if (usuario.isEmpty()){
-            throw new NoSuchElementException("Não existe usuário com esse número de id.");
-        }
-
-        return new UsuarioDadosDetalhados(usuario.get());
+    public UsuarioDadosDetalhados atualizar(UsuarioAtualizacao usuarioAtualizacao, Usuario usuarioRequisicao){
+        var usuario = this.buscarUsuario(usuarioRequisicao);
+        usuario.atualizar(usuarioAtualizacao);
+        return new UsuarioDadosDetalhados(usuario);
     }
 
-    public void deletar(Long id){
-        Optional<Usuario> usuario = this.usuarioRepository.findById(id);
-
-        if (usuario.isEmpty()){
-            throw new NoSuchElementException("Não existe usuário com esse número de id.");
-        }
-
-        this.verificarSeAcoesAtigemOutrasEntidades(usuario.get().getLogin());
-        this.usuarioRepository.deleteById(id);
+    public void deletar(Usuario usuarioRequisicao){
+        var usuario = this.buscarUsuario(usuarioRequisicao);
+        this.validadorAcaoAtingeOutraEntidade.validar(usuario);
+        this.usuarioRepository.delete(usuario);
     }
 }

@@ -61,11 +61,11 @@ public class ReservaService {
     }
 
     private void verificarUsuarioPodeRealizarAcao(Reserva reserva, Usuario usuario){
-        var usuarioReserva = reserva.getUsuario().getLogin();
-        var gestorDaQuadra = reserva.getQuadra().getGestor().getLogin();
+        var usuarioReserva = reserva.getUsuario().getEmail();
+        var gestorDaQuadra = reserva.getQuadra().getGestor().getEmail();
 
-        if (!usuarioReserva.equals(usuario.getLogin())){
-            if (!gestorDaQuadra.equals(usuario.getLogin())){
+        if (!usuarioReserva.equals(usuario.getEmail())){
+            if (!gestorDaQuadra.equals(usuario.getEmail())){
                 throw new AccessDeniedException("Somente o usuário ou gestor responsável pela quadra pode acessar esses dados.");
             }
         }

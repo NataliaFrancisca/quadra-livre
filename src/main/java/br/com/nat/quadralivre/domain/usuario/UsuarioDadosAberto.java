@@ -1,11 +1,11 @@
 package br.com.nat.quadralivre.domain.usuario;
 
 public record UsuarioDadosAberto(
-        String login,
+        String email,
         String nome,
         String telefone
 ) {
 public UsuarioDadosAberto(Usuario usuario){
-        this(usuario.getLogin(), usuario.getNome(), usuario.getTelefone());
+        this(usuario.getEmail(), usuario.getNome(), usuario.getTelefone());
     }
 }

@@ -6,7 +6,7 @@ import org.hibernate.validator.constraints.br.CPF;
 public record UsuarioRegistro(
         @NotBlank
         @Email(message = "Digite um e-mail válido. Exemplo: email@email.com")
-        String login,
+        String email,
         @NotBlank
         @Size(min = 6, message = "A senha deve ter pelo menos 6 caracteres." )
         String senha,
