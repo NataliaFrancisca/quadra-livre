@@ -36,7 +36,7 @@ public class QuadraService {
         var existeReservasParaQuadra = this.reservaRepository.existsByQuadraId(quadraId);
 
         if (existeReservasParaQuadra){
-            throw new IllegalArgumentException("Ação não pode ser concluida, pois existe reservas para essa quadra.");
+            throw new IllegalArgumentException("Ação não pode ser concluída, pois existe reservas para essa quadra.");
         }
     }
 
@@ -51,7 +51,7 @@ public class QuadraService {
     }
 
     public void verificarSeGestorResponsavelPelaQuadra(Usuario gestorQuadra, Usuario gestorAutenticacao){
-        if (!gestorQuadra.getLogin().equals(gestorAutenticacao.getLogin())){
+        if (!gestorQuadra.getEmail().equals(gestorAutenticacao.getEmail())){
             throw new AccessDeniedException("Os dados da quadra só podem ser atualizados pelo responsável do local.");
         }
     }

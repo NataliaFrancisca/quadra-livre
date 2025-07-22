@@ -24,7 +24,7 @@ public class TokenService {
             var algoritmo = Algorithm.HMAC256(this.secret);
             return JWT.create()
                     .withIssuer("API quadralivre")
-                    .withSubject(usuario.getLogin())
+                    .withSubject(usuario.getEmail())
                     .withExpiresAt(dataExpiracao())
                     .sign(algoritmo);
         }catch (JWTCreationException exception){
@@ -45,7 +45,7 @@ public class TokenService {
                     .verify(tokenJWT)
                     .getSubject();
         }catch (JWTVerificationException exception){
-            throw new BadCredentialsException("Token JWT inválido ou expirado!");
+            throw new BadCredentialsException("Token JWT invalido ou expirado!");
         }
     }
 }
