@@ -26,6 +26,11 @@ public class Quadra {
     @Column(nullable = false)
     private Endereco endereco;
 
+    @Column(nullable = false)
+    private Integer minutosReserva;
+    @Column(nullable = false)
+    private Integer minutosIntervalo;
+
     @ManyToOne
     private Usuario gestor;
 
@@ -47,6 +52,14 @@ public class Quadra {
 
         if (quadraAtualizacao.endereco() != null){
             this.endereco.atualizar(quadraAtualizacao.endereco());
+        }
+
+        if (quadraAtualizacao.minutosReserva() != null){
+            this.minutosReserva = quadraAtualizacao.minutosReserva();
+        }
+
+        if (quadraAtualizacao.minutosIntervalo() != null){
+            this.minutosIntervalo = quadraAtualizacao.minutosIntervalo();
         }
     }
 }

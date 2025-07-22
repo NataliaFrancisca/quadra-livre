@@ -1,8 +1,9 @@
 package br.com.nat.quadralivre.domain.quadra;
 
 import br.com.nat.quadralivre.domain.quadra.endereco.EnderecoRegistro;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record QuadraAtualizacao (
@@ -10,6 +11,10 @@ public record QuadraAtualizacao (
         Long id,
         @Size(min = 4, message = "O nome deve ter pelo menos 4 caracteres.")
         String nome,
-        EnderecoRegistro endereco
+        EnderecoRegistro endereco,
+        @Min(60)
+        Integer minutosReserva,
+        @PositiveOrZero
+        Integer minutosIntervalo
 ){
 }
