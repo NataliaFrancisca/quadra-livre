@@ -26,9 +26,9 @@ public class Quadra {
     @Column(nullable = false)
     private Endereco endereco;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "minutos_reserva")
     private Integer minutosReserva;
-    @Column(nullable = false)
+    @Column(nullable = false, name = "minutos_intervalo")
     private Integer minutosIntervalo;
 
     @ManyToOne
@@ -43,6 +43,8 @@ public class Quadra {
     public Quadra(QuadraRegistro quadraRegistro) {
         this.nome = quadraRegistro.nome();
         this.endereco = quadraRegistro.endereco();
+        this.minutosIntervalo = quadraRegistro.minutosIntervalo();
+        this.minutosReserva = quadraRegistro.minutosReserva();
     }
 
     public void atualizar(QuadraAtualizacao quadraAtualizacao){
