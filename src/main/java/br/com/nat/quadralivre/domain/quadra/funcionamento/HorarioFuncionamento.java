@@ -24,7 +24,9 @@ public class HorarioFuncionamento {
     @Column(nullable = false)
     private DiaSemana dia;
 
+    @Column(nullable = false)
     private LocalTime abertura;
+    @Column(nullable = false)
     private LocalTime fechamento;
     private boolean disponibilidade;
 

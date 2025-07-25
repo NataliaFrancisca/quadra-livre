@@ -1,6 +1,7 @@
 package br.com.nat.quadralivre.domain.reserva;
 
 import br.com.nat.quadralivre.domain.quadra.Quadra;
+import br.com.nat.quadralivre.domain.quadra.funcionamento.DiaSemana;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,6 +24,8 @@ public class Reserva {
     LocalTime abertura;
     LocalTime encerramento;
     LocalDateTime data;
+
+    DiaSemana diaSemana;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)

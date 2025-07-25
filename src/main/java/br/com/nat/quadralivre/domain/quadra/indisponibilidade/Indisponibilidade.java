@@ -25,4 +25,8 @@ public class Indisponibilidade {
 
     @ManyToOne
     private Quadra quadra;
+
+    public Indisponibilidade(IndisponibilidadeRegistro registro){
+        this.data = registro.data();
+    }
 }
