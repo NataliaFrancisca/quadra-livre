@@ -5,6 +5,7 @@ import br.com.nat.quadralivre.domain.quadra.QuadraRegistro;
 import br.com.nat.quadralivre.domain.quadra.QuadraService;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.*;
 import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRegistro;
+import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeService;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
 
 @RestController
 @RequestMapping("/quadras")
@@ -25,18 +24,20 @@ public class QuadraController {
     @Autowired
     private HorarioFuncionamentoService horarioFuncionamentoSerivce;
 
-    private URI generateURI(Long id, UriComponentsBuilder uriBuilder){
-        return uriBuilder
-                .path("/quadras/{id}")
-                .buildAndExpand(id)
-                .toUri();
-    }
+    @Autowired
+    private IndisponibilidadeService indisponibilidadeService;
 
     @PostMapping
-    public ResponseEntity registrarQuadra(@RequestBody @Valid QuadraRegistro quadraRegistro, UriComponentsBuilder uri, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
+    public ResponseEntity registrarQuadra(@RequestBody @Valid QuadraRegistro quadraRegistro, UriComponentsBuilder uriBuilder, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
         var quadra = this.quadraService.registrar(quadraRegistro, gestor);
-        return ResponseEntity.created(this.generateURI(quadra.id(), uri)).body(quadra);
+
+        var uri = uriBuilder
+                .path("/quadras/{id}")
+                .buildAndExpand(quadra.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(quadra);
     }
 
     @GetMapping
@@ -45,63 +46,68 @@ public class QuadraController {
         return ResponseEntity.ok(quadras);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity buscarQuadra(@PathVariable Long id){
-        var quadra = this.quadraService.buscarQuadra(id);
+    @GetMapping("/{quadraId}")
+    public ResponseEntity buscarQuadra(@PathVariable Long quadraId){
+        var quadra = this.quadraService.buscarDadosQuadra(quadraId);
         return ResponseEntity.ok(quadra);
     }
 
     @PutMapping
-    public ResponseEntity atualizarQuadra(@RequestBody @Valid QuadraAtualizacao quadraAtualizacao, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
+    public ResponseEntity atualizarQuadra(@RequestBody @Valid QuadraAtualizacao quadraAtualizacao, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
         var quadraAtualizada = this.quadraService.atualizarQuadra(quadraAtualizacao, gestor);
         return ResponseEntity.ok(quadraAtualizada);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity deletarQuadra(@PathVariable Long id, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
-        this.quadraService.deletarQuadra(id, gestor);
+    @DeleteMapping("/{quadraId}")
+    public ResponseEntity deletarQuadra(@PathVariable Long quadraId, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
+        this.quadraService.deletarQuadra(quadraId, gestor);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/horario-funcionamento/{id}")
-    public ResponseEntity definirHorarioFuncionamento(@PathVariable Long id, @RequestBody @Valid HorarioFuncionamentoRegistro horarioFuncionamentoRegistro, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
-        var paramentros = new HorarioFuncionamentoParametros(id, gestor, horarioFuncionamentoRegistro.diaSemana());
+    // horario-funcionamento
+    @PostMapping("/{quadraId}/horario-funcionamento")
+    public ResponseEntity definirHorarioFuncionamento(@PathVariable Long quadraId, @RequestBody @Valid HorarioFuncionamentoRegistro horarioFuncionamentoRegistro, Authentication auth, UriComponentsBuilder uriBuilder){
+        var gestor = (Usuario) auth.getPrincipal();
+        var horarioFuncionamento = this.horarioFuncionamentoSerivce
+                .registrar(quadraId, horarioFuncionamentoRegistro, gestor);
 
-        var funcionamento = this.horarioFuncionamentoSerivce.registarFuncionamento(paramentros, horarioFuncionamentoRegistro);
-        return ResponseEntity.ok(funcionamento);
+        var uri = uriBuilder
+                .path("/horario-funcionamento/{id}")
+                .buildAndExpand(horarioFuncionamento.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(horarioFuncionamento);
     }
 
-    @GetMapping("/horario-funcionamento/{id}")
-    public ResponseEntity buscarHorarioFuncionamento(@PathVariable Long id){
-        var funcionamento = this.horarioFuncionamentoSerivce.buscarHorarioFuncionamento(id);
-        return ResponseEntity.ok(funcionamento);
+    @GetMapping("/{quadraId}/horario-funcionamento")
+    public ResponseEntity buscarHorarioFuncionamento(@PathVariable Long quadraId){
+        var horarioFuncionamento = this.horarioFuncionamentoSerivce.buscarHorarioFuncionamento(quadraId);
+        return ResponseEntity.ok(horarioFuncionamento);
     }
 
-    @PutMapping("/horario-funcionamento/{id}")
-    public ResponseEntity atualizarHorarioFuncionamento(@PathVariable Long id, @RequestBody @Valid HorarioFuncionamentoAtualizacao horarioFuncionamentoAtualizacao, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
-        var paramentros = new HorarioFuncionamentoParametros(id, gestor, horarioFuncionamentoAtualizacao.diaSemana());
-
-        var funcionamento = this.horarioFuncionamentoSerivce.atualizarFuncionamento(paramentros, horarioFuncionamentoAtualizacao);
-        return ResponseEntity.ok(funcionamento);
+    @PutMapping("/{quadraId}/horario-funcionamento")
+    public ResponseEntity atualizarHorarioFuncionamento(@PathVariable Long quadraId, @RequestBody @Valid HorarioFuncionamentoAtualizacao horarioFuncionamentoAtualizacao, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
+        var horarioFuncionamento = this.horarioFuncionamentoSerivce
+                .atualizar(quadraId, horarioFuncionamentoAtualizacao, gestor);
+        return ResponseEntity.ok(horarioFuncionamento);
     }
 
-    @DeleteMapping("/horario-funcionamento/{id}")
-    public ResponseEntity deletarHorarioFuncionamento(@PathVariable Long id, @RequestParam DiaSemana diaSemana, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
-        var paramentros = new HorarioFuncionamentoParametros(id, gestor, diaSemana);
-
-        this.horarioFuncionamentoSerivce.deletarFuncionamento(paramentros);
+    @DeleteMapping("/{quadraId}/horario-funcionamento")
+    public ResponseEntity deletarHorarioFuncionamento(@PathVariable Long quadraId, @RequestParam DiaSemana diaSemana, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
+        this.horarioFuncionamentoSerivce.deletarFuncionamento(quadraId, diaSemana, gestor);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/indisponibilidade")
-    public ResponseEntity atualizarHorarioFuncionamento(@RequestBody @Valid IndisponibilidadeRegistro indisponibilidadeRegistro, Authentication authentication){
-        var gestor = (Usuario) authentication.getPrincipal();
-        var indisponibilidade = this.horarioFuncionamentoSerivce.setarQuadraComoIndisponivelEmDataSelecionada(indisponibilidadeRegistro, gestor);
+    // quadra-indisponivel
+    @PostMapping("/{quadraId}/indisponibilidade")
+    public ResponseEntity indicarQuadraComoIndisponivel(@PathVariable Long quadraId, @RequestBody @Valid IndisponibilidadeRegistro indisponibilidadeRegistro, Authentication auth){
+        var gestor = (Usuario) auth.getPrincipal();
+        var indisponibilidade = this.indisponibilidadeService
+                .indicarQuadraComoIndisponivelEmDataSelecionada(quadraId, indisponibilidadeRegistro, gestor);
         return ResponseEntity.ok(indisponibilidade);
     }
 }

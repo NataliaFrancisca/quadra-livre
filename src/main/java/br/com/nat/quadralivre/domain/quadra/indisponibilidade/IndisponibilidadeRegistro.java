@@ -8,8 +8,6 @@ import java.time.LocalDate;
 public record IndisponibilidadeRegistro(
         @NotNull
         @Future(message = "A data deve ser no futuro.")
-        LocalDate data,
-        @NotNull
-        Long quadraId
+        LocalDate data
 ) {
 }
