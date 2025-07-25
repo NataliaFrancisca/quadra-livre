@@ -1,6 +1,5 @@
 package br.com.nat.quadralivre.domain.quadra.funcionamento;
 
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

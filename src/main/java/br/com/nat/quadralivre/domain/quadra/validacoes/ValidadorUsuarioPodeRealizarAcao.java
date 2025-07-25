@@ -9,10 +9,8 @@ import org.springframework.stereotype.Component;
 public class ValidadorUsuarioPodeRealizarAcao {
 
     public void validar(Quadra quadra, Usuario usuarioRequisicao){
-
         if (!quadra.getGestor().getEmail().equals(usuarioRequisicao.getEmail())){
             throw new AccessDeniedException("Apenas o proprietário dos dados tem permissão de acesso.");
         }
-
     }
 }
