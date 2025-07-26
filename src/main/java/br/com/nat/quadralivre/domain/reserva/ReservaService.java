@@ -2,23 +2,24 @@ package br.com.nat.quadralivre.domain.reserva;
 
 import br.com.nat.quadralivre.domain.quadra.QuadraService;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.DiaSemana;
+import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamento;
 import br.com.nat.quadralivre.domain.quadra.funcionamento.HorarioFuncionamentoRepository;
-import br.com.nat.quadralivre.domain.quadra.indisponibilidade.IndisponibilidadeRepository;
+import br.com.nat.quadralivre.domain.reserva.geracao.GeradorDeReservas;
+import br.com.nat.quadralivre.domain.reserva.validacoes.ValidadorDadosSaoUnicos;
+import br.com.nat.quadralivre.domain.reserva.validacoes.ValidadorQuadraEstaDisponivel;
+import br.com.nat.quadralivre.domain.reserva.validacoes.ValidadorReservaDeveSerParaMesAtual;
+import br.com.nat.quadralivre.domain.reserva.validacoes.ValidadorUsuarioPodeRealizarAcao;
 import br.com.nat.quadralivre.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
 public class ReservaService {
     @Autowired
-    private GerarReservas gerarReservas;
+    private GeradorDeReservas geradorDeReservas;
 
     @Autowired
     private HorarioFuncionamentoRepository horarioFuncionamentoRepository;
@@ -30,121 +31,71 @@ public class ReservaService {
     private ReservaRepository reservaRepository;
 
     @Autowired
-    private IndisponibilidadeRepository indisponibilidadeRepository;
+    private ValidadorUsuarioPodeRealizarAcao validadorUsuarioPodeRealizarAcao;
 
-    private void verificarSeReservaJaFoiRealizada(String idReserva){
-        if (idReserva == null || idReserva.isBlank()) {
-            throw new IllegalArgumentException("O ID da reserva não pode ser nulo ou vazio.");
-        }
+    @Autowired
+    private ValidadorReservaDeveSerParaMesAtual validadorReservaDeveSerParaMesAtual;
 
-        boolean reservaJaExiste = this.reservaRepository.existsById(idReserva);
+    @Autowired
+    private ValidadorDadosSaoUnicos validadorDadosSaoUnicos;
 
-        if (reservaJaExiste){
-            throw new DataIntegrityViolationException("Já existe uma reserva para a data e horário indicado.");
-        }
-    }
-
-    private ReservaDisponivel buscarReservaParaUsuario(ReservaRegistro reservaDoUsuario){
-        ReservaBusca reservaBusca = new ReservaBusca(reservaDoUsuario.quadraId(), reservaDoUsuario.data());
-
-        List<ReservaDisponivel> reservasDisponiveis = this.exibirReservas(reservaBusca);
-
-        return reservasDisponiveis.stream()
-                .filter(h -> h.id().equals(reservaDoUsuario.reservaId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Não existe reserva livre com esse número de identificação."));
-    }
+    @Autowired
+    private ValidadorQuadraEstaDisponivel validadorQuadraEstaDisponivel;
 
     private Reserva verificarReservaExiste(String id){
         return this.reservaRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Não existe reserva com esse número de ID."));
     }
 
-    private void verificarUsuarioPodeRealizarAcao(Reserva reserva, Usuario usuario){
-        var usuarioReserva = reserva.getUsuario().getEmail();
-        var gestorDaQuadra = reserva.getQuadra().getGestor().getEmail();
+    private ReservaDisponivel identificarReserva(ReservaRegistro reserva){
+        ReservaPesquisa reservaBusca = new ReservaPesquisa(reserva.quadraId(), reserva.data());
 
-        if (!usuarioReserva.equals(usuario.getEmail())){
-            if (!gestorDaQuadra.equals(usuario.getEmail())){
-                throw new AccessDeniedException("Somente o usuário ou gestor responsável pela quadra pode acessar esses dados.");
-            }
-        }
+        List<ReservaDisponivel> reservas = this.exibirReservasDisponiveis(reservaBusca);
+
+        return reservas.stream()
+                .filter(h -> h.getId().equals(reserva.reservaId()))
+                .findFirst().orElseThrow(
+                        () -> new IllegalArgumentException("Não existe reserva com esse número de identificação."));
     }
 
-    private void verificarSeReservaEParaOMesAtual(ReservaRegistro reservaRegistro){
-        LocalDate dataReserva = LocalDate.of(reservaRegistro.data().getYear(), reservaRegistro.data().getMonth(), 1);
-        LocalDate dataAtual = LocalDate.now();
+    public List<ReservaDisponivel> exibirReservasDisponiveis(ReservaPesquisa reserva){
+        this.quadraService.buscarQuadra(reserva.quadraId());
 
-        if (dataReserva.isEqual(dataAtual)){
-            return;
-        }
+        DiaSemana diaSemana = DiaSemana.fromEnglish(reserva.data().getDayOfWeek().name());
 
-        boolean eUltimoDiaDoMes = dataAtual.getDayOfMonth() == dataAtual.lengthOfMonth();
-        var primeiroDiaDoProximoMes = dataAtual.plusMonths(1).withDayOfMonth(1);
+        HorarioFuncionamento horarioFuncionamento = this.horarioFuncionamentoRepository
+                .findByDiaAndQuadraId(diaSemana, reserva.quadraId()).orElseThrow(
+                        () -> new NoSuchElementException("A quadra escolhida não têm horário de funcionamento cadastrado para o dia indicado."));
 
-        boolean mesmaReferenciaDeMes = dataReserva.getMonth() == primeiroDiaDoProximoMes.getMonth()
-                && dataReserva.getYear() == primeiroDiaDoProximoMes.getYear();
-
-        if (eUltimoDiaDoMes && mesmaReferenciaDeMes){
-            return;
-        }
-
-        throw new IllegalArgumentException("Reservas para meses futuros só são liberadas no último dia do mês anterior.");
-    }
-
-    private void verificarSeQuadraTemEventoDeIndisponibilidadeNaDataSelecionada(LocalDate dataSolicitada){
-        var existeIndisponibilidade = this.indisponibilidadeRepository.existsByData(dataSolicitada);
-
-        if (existeIndisponibilidade){
-            throw new IllegalArgumentException("Quadra não vai estar disponível no dia indicado.");
-        }
-    }
-
-    public List<ReservaDisponivel> exibirReservas(ReservaBusca reservaBusca){
-        this.verificarSeQuadraTemEventoDeIndisponibilidadeNaDataSelecionada(reservaBusca.data());
-
-        this.quadraService.verificarQuadraExiste(reservaBusca.quadraId());
-
-        DayOfWeek data = reservaBusca.data().getDayOfWeek();
-        DiaSemana diaSemana = DiaSemana.fromEnglish(data.toString());
-
-        var horarioFuncionamento = this.horarioFuncionamentoRepository.findByDiaAndQuadraId(diaSemana, reservaBusca.quadraId());
-
-        if (horarioFuncionamento.isEmpty()){
-            throw new NoSuchElementException("Não existe quadra para esse dia da semana");
-        }
-
-        if (!horarioFuncionamento.get().isDisponibilidade()){
-            throw new IllegalArgumentException("Quadra não disponível no dia indicado.");
-        }
-
-        return this.gerarReservas.gerar(horarioFuncionamento.get(), reservaBusca.data());
+        this.validadorReservaDeveSerParaMesAtual.validar(reserva.data());
+        this.validadorQuadraEstaDisponivel.validar(reserva, horarioFuncionamento);
+        return this.geradorDeReservas.gerar(horarioFuncionamento, reserva.data());
     }
 
     public ReservaDadosAberto registrarReserva(ReservaRegistro reservaRegistro, Usuario usuario){
-        var quadra = this.quadraService.verificarQuadraExiste(reservaRegistro.quadraId());
-        this.verificarSeReservaJaFoiRealizada(reservaRegistro.reservaId());
-        var reservaDisponivel = this.buscarReservaParaUsuario(reservaRegistro);
+        var quadra = this.quadraService.buscarQuadra(reservaRegistro.quadraId());
+
+        this.validadorDadosSaoUnicos.validar(reservaRegistro.reservaId());
+        this.validadorReservaDeveSerParaMesAtual.validar(reservaRegistro.data());
+
+        var reservaDisponivel = this.identificarReserva(reservaRegistro);
 
         Reserva reserva = new Reserva(reservaDisponivel);
         reserva.setQuadra(quadra);
         reserva.setUsuario(usuario);
 
-        this.verificarSeReservaEParaOMesAtual(reservaRegistro);
-
-        var reservaSalva = this.reservaRepository.save(reserva);
-        return new ReservaDadosAberto(reservaSalva);
+        return new ReservaDadosAberto(this.reservaRepository.save(reserva));
     }
 
     public ReservaDadosDetalhados buscarReserva(String id, Usuario usuario) {
         var reserva = this.verificarReservaExiste(id);
-        this.verificarUsuarioPodeRealizarAcao(reserva, usuario);
+        this.validadorUsuarioPodeRealizarAcao.validar(reserva, usuario);
         return new ReservaDadosDetalhados(reserva);
     }
 
     public void deletarReserva(String id, Usuario usuario) {
         var reserva = this.verificarReservaExiste(id);
-        this.verificarUsuarioPodeRealizarAcao(reserva, usuario);
+        this.validadorUsuarioPodeRealizarAcao.validar(reserva, usuario);
         this.reservaRepository.deleteById(reserva.getId());
     }
 }

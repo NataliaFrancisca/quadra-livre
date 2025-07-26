@@ -42,10 +42,10 @@ public class ValidadorAcaoAtingeOutraEntidade {
         }
 
         var listaReservas = existeReservasNoDiaSemana
-                .stream().filter(r -> r.getAbertura().isBefore(abertura) || r.getEncerramento().isAfter(fechamento)).toList();
+                .stream().filter(r -> r.getInicio().isBefore(abertura) || r.getEncerramento().isAfter(fechamento)).toList();
 
         if (!listaReservas.isEmpty()){
-            throw new IllegalArgumentException("Ação não pode ser concluída porque existe reservas para a data indicada.");
+            throw new IllegalArgumentException("Ação não pode ser concluída porque a mudança atinge reservas já feitas.");
         }
     }
 }

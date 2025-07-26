@@ -6,9 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface IndisponibilidadeRepository extends JpaRepository<Indisponibilidade, Long> {
-    List<Indisponibilidade> findAllByData(LocalDate data);
-
     List<Indisponibilidade> findAllByDataBefore(LocalDate data);
-
-    boolean existsByData(LocalDate dataSolicitada);
+    boolean existsByDataAndQuadraId(LocalDate data, Long quadraId);
 }
