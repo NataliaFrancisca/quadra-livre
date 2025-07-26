@@ -36,7 +36,7 @@ public class SecurityConfigurations {
                         .requestMatchers(HttpMethod.GET, "/quadras/*/horario-funcionamento").authenticated()
                         .requestMatchers(HttpMethod.GET, "/quadras/**").authenticated()
                         .requestMatchers("/quadras/**").hasRole("GESTOR")
-
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> {
