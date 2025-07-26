@@ -16,7 +16,7 @@ public record ReservaDadosAberto(
     public ReservaDadosAberto(Reserva reserva){
         this(
                 reserva.getId(),
-                reserva.getAbertura(),
+                reserva.getInicio(),
                 reserva.getEncerramento(),
                 reserva.getData(),
                 reserva.getQuadra().getNome(),

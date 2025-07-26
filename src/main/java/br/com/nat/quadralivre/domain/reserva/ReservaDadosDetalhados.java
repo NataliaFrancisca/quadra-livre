@@ -8,8 +8,8 @@ import java.time.LocalTime;
 
 public record ReservaDadosDetalhados(
         String id,
-        LocalTime abertura,
-        LocalTime fechamento,
+        LocalTime inicio,
+        LocalTime encerramento,
         LocalDateTime data,
         QuadraDadosAberto quadra,
         UsuarioDadosAberto usuario
@@ -17,7 +17,7 @@ public record ReservaDadosDetalhados(
     public ReservaDadosDetalhados(Reserva reserva){
         this(
                 reserva.getId(),
-                reserva.getAbertura(),
+                reserva.getInicio(),
                 reserva.getEncerramento(),
                 reserva.getData(),
                 new QuadraDadosAberto(reserva.getQuadra()),

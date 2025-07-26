@@ -21,10 +21,11 @@ public class Reserva {
     @Column(unique = true)
     private String id;
 
-    private LocalTime abertura;
+    private LocalTime inicio;
     private LocalTime encerramento;
     private LocalDateTime data;
 
+    @Enumerated(EnumType.STRING)
     private DiaSemana diaSemana;
 
     @ManyToOne
@@ -37,7 +38,7 @@ public class Reserva {
 
     public Reserva(ReservaDisponivel reservaDisponivel){
         this.setId(reservaDisponivel.getId());
-        this.setAbertura(reservaDisponivel.getInicio());
+        this.setInicio(reservaDisponivel.getInicio());
         this.setEncerramento(reservaDisponivel.getEncerramento());
         this.setData(reservaDisponivel.getData());
         this.diaSemana = DiaSemana.fromEnglish(reservaDisponivel.getData().getDayOfWeek().name());
