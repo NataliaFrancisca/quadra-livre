@@ -1,7 +1,6 @@
 package br.com.nat.quadralivre.controller;
 
 import br.com.nat.quadralivre.domain.usuario.*;
-import br.com.nat.quadralivre.domain.usuario.autenticacao.UsuarioAutenticacao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,14 +21,7 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping("/login")
-    @Operation(summary = "Efetuar login do usuário", description = "Faz login do usuário no sistema e retorna um token JWT.")
-    public ResponseEntity efetuarLogin(@RequestBody @Valid UsuarioAutenticacao usuarioLogin){
-        var dados = this.usuarioService.login(usuarioLogin);
-        return ResponseEntity.ok(dados);
-    }
-
-    @PostMapping("/registrar")
+    @PostMapping
     @Operation(summary = "Registrar usuário", description = "Faz registro do usuário no sistema.")
     @Transactional
     public ResponseEntity registrarUsuario(@RequestBody @Valid UsuarioRegistro usuarioRegistro, UriComponentsBuilder uriBuilder){

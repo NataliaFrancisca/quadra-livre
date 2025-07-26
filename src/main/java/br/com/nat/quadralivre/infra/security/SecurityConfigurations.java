@@ -30,8 +30,8 @@ public class SecurityConfigurations {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/usuarios/registrar").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/autenticacao").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/quadras/*/horario-funcionamento").authenticated()
                         .requestMatchers(HttpMethod.GET, "/quadras/**").authenticated()
