@@ -2,7 +2,7 @@
 
 **quadra livre** é uma `API` desenvolvida para simplificar o gerenciamento de reserva de quadras esportivas. Com ela, os gestores dos espaços podem cadastrar suas quadras e gerar automaticamente horários de reservas para diferentes dias da semana.
 
-## Stack:
+## ➡️ Stack:
 - Java
 - Spring (JPA, Security, Web)
 - PostegreSQL
@@ -11,13 +11,15 @@
 - Lombok
 - Swagger
 
-## Funcionalidades:
-1. **cadastro de usuário:** criação de usuário 2 tipos de usuários: _GESTOR_ (responsável pelo espaço) e _USUARIO_ (quem reserva o espaço.);
-2. **cadastro de quadras:** permite que gestores registrem quadras e configurem data e horários de funcionamento.
-3. **datas de indisponibilidade:** permite que o gestor indique datas em que a quadra vai estar indisponível.
-4. **reserva:** os usuários realizam reservas para quadras em horários específicos que são gerados automaticamente.
+## ➡️ Funcionalidades:
+1. **cadastro de usuário:** criação de 2 tipos de usuários: _GESTOR_ (responsável pelo espaço) e _USUARIO_ (quem reserva o espaço.);
+3. **cadastro de quadras:** permite que gestores registrem quadras e configurem horários de funcionamento para cada dia da semana;
+4. **datas de indisponibilidade:** permite que o gestor indique datas em que a quadra vai estar indisponível;
+5. **reserva:** os usuários realizam reservas para quadras em horários específicos que são gerados automaticamente.
 
-## Como rodar essa aplicação na minha máquina?
+> Todas as rotas da aplicação são protegidas, sendo necessário que o usuário esteja autenticado. Algumas rotas possuem regras de autorização específicas, permitindo o acesso apenas a determinados tipos de usuário.
+
+## ➡️ Como rodar essa aplicação na minha máquina?
 
 ### 1. Faça o clone do projeto:
 abra o terminal e execute:
@@ -37,7 +39,8 @@ abra o terminal do PostgreSQL e execute o comando:
 ```bash
   CREATE DATABASE quadralivre
 ```
-altere os dados no arquivo ``application.properties``:
+altere os dados (_**username** e **password**_) no arquivo ``application.properties``:
+
 ```bash
   spring.datasource.url=jdbc:postgresql://localhost/quadralivre
   spring.datasource.username=${DB_USER}
