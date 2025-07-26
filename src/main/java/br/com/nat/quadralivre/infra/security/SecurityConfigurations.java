@@ -33,13 +33,10 @@ public class SecurityConfigurations {
                         .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios/registrar").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/quadras/*/horario-funcionamento").authenticated()
                         .requestMatchers(HttpMethod.GET, "/quadras/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/quadras/**/horario-funcionamento").authenticated()
+                        .requestMatchers("/quadras/**").hasRole("GESTOR")
 
-                        .requestMatchers("/quadras/***").hasRole("GESTOR")
-
-                        .requestMatchers("/reservas/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/reservas").hasRole("CLIENTE")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> {
