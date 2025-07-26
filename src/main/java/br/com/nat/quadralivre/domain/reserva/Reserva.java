@@ -21,24 +21,25 @@ public class Reserva {
     @Column(unique = true)
     private String id;
 
-    LocalTime abertura;
-    LocalTime encerramento;
-    LocalDateTime data;
+    private LocalTime abertura;
+    private LocalTime encerramento;
+    private LocalDateTime data;
 
-    DiaSemana diaSemana;
+    private DiaSemana diaSemana;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
-    Usuario usuario;
+    private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "quadra_id", nullable = false)
-    Quadra quadra;
+    private Quadra quadra;
 
     public Reserva(ReservaDisponivel reservaDisponivel){
-        this.setId(reservaDisponivel.id());
-        this.setAbertura(reservaDisponivel.abertura());
-        this.setEncerramento(reservaDisponivel.fechamento());
-        this.setData(reservaDisponivel.data());
+        this.setId(reservaDisponivel.getId());
+        this.setAbertura(reservaDisponivel.getInicio());
+        this.setEncerramento(reservaDisponivel.getEncerramento());
+        this.setData(reservaDisponivel.getData());
+        this.diaSemana = DiaSemana.fromEnglish(reservaDisponivel.getData().getDayOfWeek().name());
     }
 }
