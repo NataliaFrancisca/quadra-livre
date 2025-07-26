@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public record ReservaBusca(
+public record ReservaPesquisa(
         @NotNull
         Long quadraId,
         @NotNull(message = "O campo data é obrigatório.")
