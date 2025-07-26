@@ -1,16 +1,17 @@
 package br.com.nat.quadralivre.domain.reserva;
 
-import br.com.nat.quadralivre.domain.quadra.QuadraDadosAberto;
+import br.com.nat.quadralivre.domain.usuario.UsuarioDadosAberto;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record ReservaDadosAberto(
         String id,
-        LocalTime abertura,
-        LocalTime fechamento,
+        LocalTime inicio,
+        LocalTime encerramento,
         LocalDateTime data,
-        QuadraDadosAberto quadra
+        String quadra,
+        UsuarioDadosAberto usuario
 ) {
     public ReservaDadosAberto(Reserva reserva){
         this(
@@ -18,7 +19,8 @@ public record ReservaDadosAberto(
                 reserva.getAbertura(),
                 reserva.getEncerramento(),
                 reserva.getData(),
-                new QuadraDadosAberto(reserva.quadra)
+                reserva.getQuadra().getNome(),
+                new UsuarioDadosAberto(reserva.getUsuario())
         );
     }
 }
