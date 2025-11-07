@@ -5,10 +5,11 @@ public record UsuarioDadosDetalhados (
     String email,
     String nome,
     String telefone,
+    String senha,
     String cpf,
     Role role
 ){
     public UsuarioDadosDetalhados(Usuario usuario){
-        this(usuario.getId(), usuario.getEmail(), usuario.getNome(), usuario.getTelefone(), usuario.getCpf(), usuario.getRole());
+        this(usuario.getId(), usuario.getEmail(), usuario.getNome(), usuario.getTelefone(), usuario.getSenha(), usuario.getCpf(), usuario.getRole());
     }
 }
