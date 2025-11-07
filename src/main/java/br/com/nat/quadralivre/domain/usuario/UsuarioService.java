@@ -2,7 +2,6 @@ package br.com.nat.quadralivre.domain.usuario;
 
 import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorAcaoAtingeOutraEntidade;
 import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorDadosSaoUnicos;
-import br.com.nat.quadralivre.domain.usuario.validacoes.ValidadorUsuarioPodeRealizarAcao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,9 +18,6 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private ValidadorUsuarioPodeRealizarAcao validadorUsuarioPodeRealizarAcao;
-
-    @Autowired
     private ValidadorDadosSaoUnicos validadorDadosSaoUnicos;
 
     @Autowired
@@ -32,6 +28,11 @@ public class UsuarioService {
                 .orElseThrow(() -> new NoSuchElementException("Usuário autenticado não encontrado ou sessão inválida."));
     }
 
+    public UsuarioDadosDetalhados buscar(Usuario usuarioRequisicao) {
+        var usuario = this.buscarUsuario(usuarioRequisicao);
+        return new UsuarioDadosDetalhados(usuario);
+    }
+
     public UsuarioDadosDetalhados registrar(UsuarioRegistro usuarioRegistro){
         this.validadorDadosSaoUnicos.validar(usuarioRegistro);
 
@@ -39,12 +40,6 @@ public class UsuarioService {
         usuario.setSenha(this.passwordEncoder.encode(usuarioRegistro.senha()));
 
         return new UsuarioDadosDetalhados(this.usuarioRepository.save(usuario));
-    }
-
-    public UsuarioDadosDetalhados buscar(Long id, Usuario usuarioRequisicao) {
-        this.validadorUsuarioPodeRealizarAcao.validar(usuarioRequisicao.getId(), id);
-        var usuario = this.buscarUsuario(usuarioRequisicao);
-        return new UsuarioDadosDetalhados(usuario);
     }
 
     public UsuarioDadosDetalhados atualizar(UsuarioAtualizacao usuarioAtualizacao, Usuario usuarioRequisicao){

@@ -35,11 +35,11 @@ public class UsuarioController {
         return ResponseEntity.created(uri).body(usuario);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping
     @Operation(summary = "Busca usuário", description = "Busca um usuário no sistema.")
-    public ResponseEntity buscarUsuario(@PathVariable Long id, Authentication auth){
+    public ResponseEntity buscarUsuario(Authentication auth){
         var usuario = (Usuario) auth.getPrincipal();
-        return ResponseEntity.ok(this.usuarioService.buscar(id, usuario));
+        return ResponseEntity.ok(this.usuarioService.buscar(usuario));
     }
 
     @PutMapping
